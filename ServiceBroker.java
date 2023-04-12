@@ -6,8 +6,12 @@ public class ServiceBroker{
 	
 	// Need a way to store the addresses and ports of service providers.
 	// Formatting of data string: IPaddress-Port#
+	
+	public static ArrayList<BrokerItems> = new ArrayList<BrokerItems>();
+	/*
 	public static ArrayList<String> rngAvail = new ArrayList<String>();
 	public static ArrayList<String> hashAvail = new ArrayList<String>();
+	*/
 	
 	public static void main(String[] args){
 		ServerSocket brokerSocket = null;
@@ -32,6 +36,19 @@ public class ServiceBroker{
 	}
 }
 
+class BrokerItems{
+	public String IPadd;
+	public String portNum;
+	public int serviceID; 
+	
+	public BrokerItems(String IPadd, String portNum, int serviceID){
+		this.IPadd = IPadd;
+		this.portNum = portNum;
+		this.serviceID = serviceID;		
+	}
+	
+}
+
 class ClientHandler implements Runnable{
 	private DataInputStream in;
 	private DataOutputStream out;
@@ -48,11 +65,13 @@ class ClientHandler implements Runnable{
 	IP address and port number formatted together as a string if the service is 
 	available and NA if the service is not.
 	*/
+	
 	public void run(){
 		try{
 			in = new DataInputStream(clientSocket.getInputStream());
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
+			
 			if (request.equals("portAvail")){
 				int rngSize = ServiceBroker.rngAvail.size();
 				int hashSize = ServiceBroker.hashAvail.size();
@@ -99,7 +118,9 @@ class ClientHandler implements Runnable{
 						out.writeBoolean(true);
 					}else{out.writeBoolean(false);}	
 				}
-			}else if (request.equals("getRandNum")){
+			}
+			// Change this into one get Request call 
+			else if (request.equals("getRandNum")){
 				if(ServiceBroker.rngAvail.size() == 0){
 					out.writeUTF("NA");
 				}else{
@@ -114,9 +135,13 @@ class ClientHandler implements Runnable{
 				out.writeUTF(ServiceBroker.hashAvail.get(index));	
 				}				
 			}
+			// end of lines that need to be changed
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
 	}
+	
+	
 }
+
