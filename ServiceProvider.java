@@ -22,12 +22,21 @@ public class ServiceProvider{
 			out.writeUTF("registerProvider");
 			System.out.println("Please enter your desired username. (No more than 10 characters long)\n");
 			String userName = inputScanner.nextLine();
-			//ignore length need to check that name is not in broker
-			/*while(userName.length > 10 || userName.length < 1){
-				System.out.println("Please enter your desired username. (No more than 10 characters long)\n");
-				userName = inputScanner.nextLine();
-			}*/
-			out.writeUTF(userName);
+			boolean invalidUser = true;
+			while(invalidUser){
+				out.writeUTF(userName);
+				invalidUser = in.readBoolean();
+				if (userName.length > 10){
+					invalidUser = invalidUser || true;
+				}else if(userName.length < 1){
+					invalidUser = invalidUser || true;
+				}
+				if (invalidUser){
+					System.out.println("Please enter your desired username. (No more than 10 characters long)\n");
+					userName = inputScanner.nextLine();					
+				}
+				out.writeBoolean(invalidUser);
+			}
 			System.out.println("Please enter your desired password. (No more than 10 characters long)\n");
 			String password = inputScanner.nextLine();
 			/*

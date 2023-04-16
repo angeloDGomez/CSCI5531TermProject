@@ -48,6 +48,10 @@ class BrokerItems{
 		this.userName = user;
 		this.password = pass;
 	}
+	
+	public String getUName(){
+		return userName;
+	}
 }
 
 class ClientHandler implements Runnable{
@@ -70,8 +74,13 @@ class ClientHandler implements Runnable{
 				
 			}else if(request.equals("registerProvider")){
 				int provPort = generatePort();
-				
-				
+				boolean invalidUser = true;
+				String userName = "";
+				while(invalidUser){
+					userName = in.readUTF();
+					out.writeBoolean(nameTaken(userName));
+					invalidUser = in.readBoolean();
+				}
 				
 			}else{//else statement is only called by Service Requester
 				
@@ -92,6 +101,23 @@ class ClientHandler implements Runnable{
 		return provPort;
 	}
 	
+	public boolean nameTaken(String uname){
+		if (MyBroker.brokerInventory.size() == 0){
+			return false;
+		}
+		else{
+			boolean avail = true;
+			for (int i = 0; i < MyBroker.brokerInventory.size(); i++){
+				if (MyBroker.brokerInventory.get(i).getUName().equals(uname)){
+					avail = false;
+				}
+			}
+			return !avail;
+		}
+		
+		
+	}
+	/*
 	// i/o stuff needs to be done in run()
 	// it needs the try catch stuff
 	public void registerProvider(){
@@ -103,6 +129,6 @@ class ClientHandler implements Runnable{
 		//BrokerItem newProvider = new BrokerItem(provIP, Integer.toString(provPort), user, pass);
 		out.writeInt(provPort);
 		//System.out.printf("New provider " + %s + " has been registerd.\n". user);
-		}
+		}*/
 	
 }
