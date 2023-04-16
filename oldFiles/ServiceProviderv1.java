@@ -1,8 +1,15 @@
+/*
+Code by Angelo Gomez, 1535298
+CSCI 5531
+*/
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
 import java.util.Random;
 import java.util.ArrayList;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class ServiceProvider{
 	
@@ -35,7 +42,6 @@ public class ServiceProvider{
 		}		
 	}
 	
-	
 	// Generates a port number that is currently not in use 
 	public static int validPNum(int providerPort){
 		ArrayList<Integer> unavailPNums = new ArrayList<Integer>();
@@ -59,10 +65,12 @@ public class ServiceProvider{
 		// error handling
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
-		} catch (IOException e){System.out.println("\nIO:"+e.getMessage());
+		} catch (IOException e){
+			System.out.println("\nIO:"+e.getMessage());
+			System.out.println("Broker is currently unavailable.\nShutting down.");
+			System.exit(0);
 		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
-		
-		while(!unavailPNums.contains(providerPort)){
+		while(unavailPNums.contains(providerPort)){
 			providerPort = getRandNum(49152, 65535);
 		}
 		return providerPort;
@@ -85,8 +93,6 @@ public class ServiceProvider{
 		int randomNum = rand.nextInt((high - low) + 1) + low;
 		return randomNum;
 	}
-	
-	public static void getHash(){}
 }
 
 /*
@@ -97,6 +103,7 @@ class BrokerCom implements Runnable{
 	public static int brokerPort = 49155;
 	final int portNum;
 	Scanner inputScanner;
+	
 	public BrokerCom(int portNum){
 		this.portNum = portNum;
 		this.inputScanner = new Scanner(System.in);
@@ -152,7 +159,10 @@ class BrokerCom implements Runnable{
 		// error handling
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
-		} catch (IOException e){System.out.println("\nIO:"+e.getMessage());
+		} catch (IOException e){
+			System.out.println("\nIO:"+e.getMessage());
+			System.out.println("Broker is currently unavailable.\nShutting down.");
+			System.exit(0);			
 		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
 	}
 	
@@ -172,7 +182,10 @@ class BrokerCom implements Runnable{
 		// error handling
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
-		} catch (IOException e){System.out.println("\nIO:"+e.getMessage());
+		} catch (IOException e){
+			System.out.println("\nIO:"+e.getMessage());
+			System.out.println("Broker is currently unavailable.\nShutting down.");
+			System.exit(0);			
 		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
 	}
 }
@@ -204,12 +217,58 @@ class ClientServer implements Runnable{
 			else{
 				String hashType = in.readUTF();
 				String strToHash = in.readUTF();
+				out.writeUTF(getHash(hashType, strToHash));
 			}
-			
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
 	}
+	
+	public String getHash(String hashType, String strToHash){
+		// MD5
+		if (hashType.equals("1")){
+			try{
+				MessageDigest md = MessageDigest.getInstance("MD5");
+				byte[] messageDigest = md.digest(strToHash.getBytes());				
+				BigInteger no = new BigInteger(1, messageDigest);
+				String hashtext = no.toString(16);
+				while (hashtext.length() < 32) {hashtext = "0" + hashtext;}
+				return hashtext;
+			}catch (NoSuchAlgorithmException e){
+				throw new RuntimeException(e);
+			}			
+		// SHA-1
+		}else if(hashType.equals("2")){
+			try{
+				MessageDigest md = MessageDigest.getInstance("SHA-1");
+				byte[] messageDigest = md.digest(strToHash.getBytes()); 
+				BigInteger no = new BigInteger(1, messageDigest);	 
+				String hashtext = no.toString(16);
+				while (hashtext.length() < 32) {hashtext = "0" + hashtext;}
+				return hashtext;				
+			}catch (NoSuchAlgorithmException e){
+				throw new RuntimeException(e);
+			}
+		// SHA-256
+		}else{
+			try{
+				MessageDigest md = MessageDigest.getInstance("SHA-256");
+				byte[] messageDigest = md.digest(strToHash.getBytes());
+				BigInteger no = new BigInteger(1, messageDigest);
+				String hashtext = no.toString(16);
+				while (hashtext.length() < 32) {hashtext = "0" + hashtext;}
+				return hashtext;				
+			}catch (NoSuchAlgorithmException e){
+				throw new RuntimeException(e);
+			}			
+		}
+	}
+	public static String toHexString(byte[] hash){
+        BigInteger number = new BigInteger(1, hash);
+        StringBuilder hexString = new StringBuilder(number.toString(16));
+        while (hexString.length() < 64){hexString.insert(0, '0');}
+		return hexString.toString();
+    }
 		
 }
