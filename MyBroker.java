@@ -78,10 +78,15 @@ class ClientHandler implements Runnable{
 				String userName = "";
 				while(invalidUser){
 					userName = in.readUTF();
-					out.writeBoolean(nameTaken(userName));
-					invalidUser = in.readBoolean();
+					invalidUser = nameTaken(userName);
+					out.writeBoolean(invalidUser);
 				}
-				
+				String pass = in.readUTF();
+				String provIP = clientSocket.getInetAddress().toString();
+				BrokerItems newProvider = new BrokerItems(provIP, Integer.toString(provPort), userName, pass);
+				MyBroker.brokerInventory.add(newProvider);
+				System.out.printf("New provider %s has been registerd.\n", userName);
+				out.writeInt(provPort);
 			}else{//else statement is only called by Service Requester
 				
 			}	
@@ -113,22 +118,8 @@ class ClientHandler implements Runnable{
 				}
 			}
 			return !avail;
-		}
-		
-		
+		}	
 	}
-	/*
-	// i/o stuff needs to be done in run()
-	// it needs the try catch stuff
-	public void registerProvider(){
-		// validate unique userName String user = in.readUTF();
-		
-		
-		String pass = in.readUTF();
-		String provIP = clientSocket.getInetAddress().toString();
-		//BrokerItem newProvider = new BrokerItem(provIP, Integer.toString(provPort), user, pass);
-		out.writeInt(provPort);
-		//System.out.printf("New provider " + %s + " has been registerd.\n". user);
-		}*/
+	
 	
 }

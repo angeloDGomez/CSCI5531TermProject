@@ -6,38 +6,37 @@ import java.util.ArrayList;
 
 public class ServiceProvider{
 	final static int brokerPort = 49155;
-	Scanner inputScanner = new Scanner(System.in);
+	public static Scanner inputScanner = new Scanner(System.in);
 	
-	public static main(String[] args){
-		registerSelf();
+	public static void main(String[] args){
+		int myPort = registerSelf();
+		if (myPort == -1){
+			System.out.println("ERROR: Something wrong happened in system set up. Shutting Down.");
+			System.exit(0);
+		}
 		
 	}
 
-	public static registerSelf(){
+	public static int registerSelf(){
 		Socket s = null;
 		try{
-			s = new Socket("localhost", providerPort);
+			s = new Socket("localhost", brokerPort);
 			DataInputStream in = new DataInputStream( s.getInputStream());
 			DataOutputStream out =new DataOutputStream( s.getOutputStream());
 			out.writeUTF("registerProvider");
-			System.out.println("Please enter your desired username. (No more than 10 characters long)\n");
+			System.out.println("Please enter your desired username.\n");
 			String userName = inputScanner.nextLine();
 			boolean invalidUser = true;
 			while(invalidUser){
 				out.writeUTF(userName);
 				invalidUser = in.readBoolean();
-				if (userName.length > 10){
-					invalidUser = invalidUser || true;
-				}else if(userName.length < 1){
-					invalidUser = invalidUser || true;
-				}
+				// Waiting to hear from professor about required length and characters for user name and password.
 				if (invalidUser){
-					System.out.println("Please enter your desired username. (No more than 10 characters long)\n");
+					System.out.println("Please enter your desired username.\n");
 					userName = inputScanner.nextLine();					
 				}
-				out.writeBoolean(invalidUser);
 			}
-			System.out.println("Please enter your desired password. (No more than 10 characters long)\n");
+			System.out.println("Please enter your desired password.\n");
 			String password = inputScanner.nextLine();
 			/*
 			while(userName.length > 10 || userName.length < 1){
@@ -46,8 +45,7 @@ public class ServiceProvider{
 			}*/
 			out.writeUTF(password);			
 			int myPort = in.readInt();
-			
-			
+			return myPort;
 		// error handling
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
@@ -56,9 +54,29 @@ public class ServiceProvider{
 			System.out.println("Broker is currently unavailable.\nShutting down.");
 			System.exit(0);
 		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}			
-		
-		
-		System.out.println("");
-		
+		return -1;
 	}
 }
+
+/*
+Class used to communicate with the broker.
+Takes user input on whether to add or remove a service.
+ */
+class BrokerCom implements Runnable{
+	public static int brokerPort = 49155;
+	final int portNum;
+	Scanner inputScanner;
+
+	public BrokerCom(int portNum){
+		this.portNum = portNum;
+		this.inputScanner = new Scanner(System.in);
+	}
+	
+	public void run(){
+		String userInput;
+		
+	}
+
+}
+
+///		System.out.println("");
