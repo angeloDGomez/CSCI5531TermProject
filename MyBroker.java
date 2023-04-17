@@ -49,8 +49,28 @@ class BrokerItems{
 		this.password = pass;
 	}
 	
+	public String getIPadd(){
+		return IPadd;
+	}
+	
+	public String getPortNum(){
+		return portNum;
+	}
+	
 	public String getUName(){
 		return userName;
+	}
+	
+	public String getPassword(){
+		return password;
+	}
+	
+	public boolean addService(int newService){
+		if (services.contains(newService)){return false;}
+		else{
+			services.add(newService);
+			return true;
+		}
 	}
 }
 
@@ -69,7 +89,20 @@ class ClientHandler implements Runnable{
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
 			if(request.equals("addService")){
-				
+				String currUN = in.readUTF();
+				String currPass = in.readUTF();
+				int validUP = validUser(currUN, currPass);
+				out.writeInt(validUP);
+				// Maybe implement number of tries before failing
+				while(validUP == -1){
+					currUN = in.readUTF();
+					currPass = in.readUTF();
+					validUP = validUser(currUN, currPass);
+					out.writeInt(validUP);
+				}
+				int serviceID = Integer.valueOf(in.readUTF());
+				BrokerItems currentClient = MyBroker.brokerInventory.get(i);
+				boolean successfulAdd = currentClient.addService(serviceID);
 			}else if(request.equals("removeService")){
 				
 			}else if(request.equals("registerProvider")){
@@ -121,5 +154,14 @@ class ClientHandler implements Runnable{
 		}	
 	}
 	
+	public int validUser(String uname, String password){
+		int i;
+		for (i = 0; i < MyBroker.brokerInventory.size(); i++){
+			if (MyBroker.brokerInventory.get(i).getUName().equals(uname)){break;}
+		}
+		if (i == MyBroker.brokerInventory.size()){return -1;}
+		else if (MyBroker.brokerInventory.get(i).getPassword().equals(password)){return i;}
+		else{return -1;}	
+	}
 	
 }

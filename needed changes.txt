@@ -1,5 +1,0 @@
-Service Broker needs to be completely dynamic.
-1 Array for all possible actions.
-
-Need to store data in a format like,
-port, ip, service

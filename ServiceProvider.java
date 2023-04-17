@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.Scanner;
 import java.util.Random;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class ServiceProvider{
 	final static int brokerPort = 49155;
@@ -101,11 +102,11 @@ class BrokerCom implements Runnable{
 	public String validateOption(int mode, String userInput){
 		if (mode == 1){ // Checks for add or remove service
 			while(!(userInput.equals("1") || userInput.equals("2"))){
-				System.out.println("\nPlease enter the number 1, or 2.\nWould you like to:\n1. Add a service\n2. Remove a service");
+				System.out.println("\nPlease enter the number 1 or 2.\nWould you like to:\n1. Add a service\n2. Remove a service");
 				userInput = inputScanner.nextLine();
 			}			
 		}else{ // Checks for desired service.
-			while(!(serviceOptionList.contains(userInput))){
+			while(!(Arrays.asList(serviceOptionList).contains(userInput))){
 				System.out.println("\nPlease enter a number associated with the listed servies.");
 				System.out.println(serviceOptionString);
 				userInput = inputScanner.nextLine();
@@ -120,9 +121,22 @@ class BrokerCom implements Runnable{
 			s = new Socket("localhost", brokerPort);
 			DataInputStream in = new DataInputStream( s.getInputStream());
 			DataOutputStream out =new DataOutputStream( s.getOutputStream());
-			
-			
-			
+			out.writeUTF("addService");
+			out.writeUTF(requestUName());
+			out.writeUTF(requestPassword());
+			int isValid = in.readInt();
+			while(isValid == -1){
+				System.out.println("\nUsername or password was incorrect.\nPlease try again.");
+				out.writeUTF(requestUName());
+				out.writeUTF(requestPassword());
+				isValid = in.readInt();
+			}
+			System.out.println("\nUsername and password accepted!");
+			// Add two factor authentication here
+			out.writeUTF(serviceNum);
+			if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
+			else{System.out.println("\nYou already provide this service.");}
+			s.close();	
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 		} catch (IOException e){
@@ -139,6 +153,7 @@ class BrokerCom implements Runnable{
 			s = new Socket("localhost", brokerPort);
 			DataInputStream in = new DataInputStream( s.getInputStream());
 			DataOutputStream out =new DataOutputStream( s.getOutputStream());
+			out.writeUTF("removeService");
 			
 			
 			
@@ -149,6 +164,16 @@ class BrokerCom implements Runnable{
 			System.out.println("Broker is currently unavailable.\nShutting down.");
 			System.exit(0);			
 		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
+	}
+	
+	public String requestUName(){
+		System.out.println("\nPlease enter your username:");
+		return inputScanner.nextLine();
+	}
+	
+	public String requestPassword(){
+		System.out.println("\nPlease enter your password:");
+		return inputScanner.nextLine();		
 	}
 
 }
