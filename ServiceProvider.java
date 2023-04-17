@@ -30,7 +30,7 @@ public class ServiceProvider{
 			while(invalidUser){
 				out.writeUTF(userName);
 				invalidUser = in.readBoolean();
-				// Waiting to hear from professor about required length and characters for user name and password.
+				// Add userName and password checking
 				if (invalidUser){
 					System.out.println("Please enter your desired username.\n");
 					userName = inputScanner.nextLine();					
@@ -66,6 +66,8 @@ class BrokerCom implements Runnable{
 	public static int brokerPort = 49155;
 	final int portNum;
 	Scanner inputScanner;
+	public static String[] serviceOptionList = {"1", "2"}; // Add number options to increase the number of available services
+	public static String serviceOptionString = "\n1. Random Number Generator\n2. Hash Generator"; // Additional services needed to be added to this string when updated.
 
 	public BrokerCom(int portNum){
 		this.portNum = portNum;
@@ -74,7 +76,79 @@ class BrokerCom implements Runnable{
 	
 	public void run(){
 		String userInput;
+		while(true){
+			System.out.println("\nWould you like to:\n1. Add a service\n2. Remove a service");
+			userInput = inputScanner.nextLine();
+			userInput = validateOption(1, userInput);
+			if (userInput.equals("1")){
+				System.out.println("\nWhat sevice would you like to add:"); 
+				System.out.println(serviceOptionString);
+				userInput = inputScanner.nextLine();
+				userInput = validateOption(2, userInput);
+				System.out.println("\nContacting Service Broker to fulfull request.");
+				addService(userInput);
+			}else{
+				System.out.println("\nWhat sevice would you like to remove:");
+				System.out.println(serviceOptionString);
+				userInput = inputScanner.nextLine();
+				userInput = validateOption(2, userInput);
+				System.out.println("\nContacting Service Broker to fulfull request.");
+				removeService(userInput);
+			}
+		}
+	}
+	
+	public String validateOption(int mode, String userInput){
+		if (mode == 1){ // Checks for add or remove service
+			while(!(userInput.equals("1") || userInput.equals("2"))){
+				System.out.println("\nPlease enter the number 1, or 2.\nWould you like to:\n1. Add a service\n2. Remove a service");
+				userInput = inputScanner.nextLine();
+			}			
+		}else{ // Checks for desired service.
+			while(!(serviceOptionList.contains(userInput))){
+				System.out.println("\nPlease enter a number associated with the listed servies.");
+				System.out.println(serviceOptionString);
+				userInput = inputScanner.nextLine();
+			}	
+		}
+		return userInput;	
+	}
+	
+	public void addService(String serviceNum){
+		Socket s = null;
+		try{
+			s = new Socket("localhost", brokerPort);
+			DataInputStream in = new DataInputStream( s.getInputStream());
+			DataOutputStream out =new DataOutputStream( s.getOutputStream());
+			
+			
+			
+		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
+		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
+		} catch (IOException e){
+			System.out.println("\nIO:"+e.getMessage());
+			System.out.println("Broker is currently unavailable.\nShutting down.");
+			System.exit(0);			
+		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
 		
+	}
+	
+	public void removeService(String serviceNum){
+		Socket s = null;
+		try{
+			s = new Socket("localhost", brokerPort);
+			DataInputStream in = new DataInputStream( s.getInputStream());
+			DataOutputStream out =new DataOutputStream( s.getOutputStream());
+			
+			
+			
+		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
+		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
+		} catch (IOException e){
+			System.out.println("\nIO:"+e.getMessage());
+			System.out.println("Broker is currently unavailable.\nShutting down.");
+			System.exit(0);			
+		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
 	}
 
 }
