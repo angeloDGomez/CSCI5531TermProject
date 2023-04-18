@@ -72,6 +72,14 @@ class BrokerItems{
 			return true;
 		}
 	}
+	
+	public boolean removeService(int oldService){
+		if(services.contains(oldService)){
+			services.remove(Integer.valueOf(oldService));
+			return true;
+		}
+		else{return false;}
+	}
 }
 
 class ClientHandler implements Runnable{
@@ -100,11 +108,27 @@ class ClientHandler implements Runnable{
 					validUP = validUser(currUN, currPass);
 					out.writeInt(validUP);
 				}
+				// implement 2FA here
 				int serviceID = Integer.valueOf(in.readUTF());
-				BrokerItems currentClient = MyBroker.brokerInventory.get(i);
+				BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
 				boolean successfulAdd = currentClient.addService(serviceID);
+				out.writeBoolean(successfulAdd);
 			}else if(request.equals("removeService")){
-				
+				String currUN = in.readUTF();
+				String currPass = in.readUTF();
+				int validUP = validUser(currUN, currPass);	
+				out.writeInt(validUP);
+				while(validUP == -1){
+					currUN = in.readUTF();
+					currPass = in.readUTF();
+					validUP = validUser(currUN, currPass);
+					out.writeInt(validUP);
+				}
+				// implement 2FA here				
+				int serviceID = Integer.valueOf(in.readUTF());
+				BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
+				boolean successfulRemove = currentClient.removeService(serviceID);
+				out.writeBoolean(successfulRemove);				
 			}else if(request.equals("registerProvider")){
 				int provPort = generatePort();
 				boolean invalidUser = true;
