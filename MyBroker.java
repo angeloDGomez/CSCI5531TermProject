@@ -145,6 +145,7 @@ class ClientHandler implements Runnable{
 				}
 				String pass = in.readUTF();
 				String provIP = clientSocket.getInetAddress().toString();
+				provIP = provIP.substring(1, provIP.length());
 				BrokerItems newProvider = new BrokerItems(provIP, Integer.toString(provPort), userName, pass);
 				MyBroker.brokerInventory.add(newProvider);
 				System.out.printf("New provider %s has been registerd.\n", userName);

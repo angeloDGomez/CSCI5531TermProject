@@ -80,15 +80,17 @@ public class ServiceRequester{
 						case 1://Print.
 							toPrint = in.readUTF();
 							System.out.println(toPrint);
+							break;
 						case 2://Print and return user input.
 							toPrint = in.readUTF();
 							System.out.println(toPrint);
 							toSend = inputScanner.nextLine();
-							out.writeUTF(toSend);					
+							out.writeUTF(toSend);
+							break;
 					}
 					reqInProgress = in.readBoolean();
-					
 				}
+				s.close();
 			} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 			} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 			} catch (IOException e){System.out.println("\nIO:"+e.getMessage());

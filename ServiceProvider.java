@@ -231,7 +231,7 @@ class ClientServer implements Runnable{
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
 			if(request.equals("1")){
-				//getRandNum(in, out);
+				getRandNum(in, out);
 			}
 			else if(request.equals("2")){
 				
@@ -249,19 +249,62 @@ class ClientServer implements Runnable{
 	
 	public void getRandNum(DataInputStream in, DataOutputStream out){
 		try{
-			int l;
-			int h;
+			int l = 0;
+			int h = 0;
 			String currIn;
-			out.writeInt(2);
-			out.writeUTF("\nPlease enter a integer value for the bottom of your random number's range:");
-			currIn = in.readUTF();
+			boolean keepLooping = true;
+			// Get lower value of RNG range.
+			while(keepLooping){
+				out.writeInt(2);
+				out.writeUTF("\nPlease enter a integer value for the bottom of your random number's range:");
+				currIn = in.readUTF();
+				keepLooping = ensureInt(currIn);
+				if (keepLooping){
+					out.writeBoolean(true);
+					out.writeInt(1);
+					out.writeUTF("\nPlease enter a integer value.");
+				}
+				else{l = Integer.parseInt(currIn);}
+				out.writeBoolean(true);	
+			}
+			keepLooping = true;
+			// Get upper value of RNG range.
+			while(keepLooping){
+				out.writeInt(2);
+				out.writeUTF("\nPlease enter a integer value for the top of your random number's range:");
+				currIn = in.readUTF();
+				keepLooping = ensureInt(currIn);
+				if(keepLooping){
+					out.writeBoolean(true);
+					out.writeInt(1);
+					out.writeUTF("\nThat is not an integer value.");
+				}else if (Integer.parseInt(currIn) <= l){
+					out.writeBoolean(true);
+					out.writeInt(1);
+					out.writeUTF("\nPlease enter a higher value.");
+					keepLooping = true;
+				}else{h = Integer.parseInt(currIn);}
+				out.writeBoolean(true);
+			}
+			Random rand = new Random();
+			int randomNum = rand.nextInt((h - l) + 1) + l;
+			out.writeInt(1);
+			String finalMsg = String.format("\nYour random number is %d.", randomNum);
+			out.writeUTF(finalMsg);
 			out.writeBoolean(false);
-			
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
-		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
-		
+		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}	
+	}
+	
+	public boolean ensureInt(String intToTest){
+		try{
+			int x = Integer.parseInt(intToTest);
+			return false;
+		}catch(NumberFormatException e){
+			return true;
+		}
 	}
 	
 }
