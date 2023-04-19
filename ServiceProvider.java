@@ -307,4 +307,19 @@ class ClientServer implements Runnable{
 		}
 	}
 	
+	public void getHash(DataInputStream in, DataOutputStream out){
+		try{
+			String stringToHash = ""
+			int hashType;
+			String currIn;
+			boolean keepLooping = true;
+			
+			
+			
+			
+		// error handling
+		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
+		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
+		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}	
+	}
 }
