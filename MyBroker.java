@@ -140,9 +140,20 @@ class ClientHandler implements Runnable{
 				String userName = "";
 				while(invalidUser){
 					userName = in.readUTF();
-					invalidUser = nameTaken(userName);
-					out.writeBoolean(invalidUser);
+					invalidUser = containValidChars(userName);
+					if(invalidUser){
+						out.writeBoolean(invalidUser);
+						out.writeInt(1);
+					}
+					else{
+						invalidUser = nameTaken(userName);
+						if (invalidUser){
+							out.writeBoolean(invalidUser);
+							out.writeInt(2);
+						}
+					}
 				}
+				out.writeBoolean(invalidUser);
 				String pass = in.readUTF();
 				String provIP = clientSocket.getInetAddress().toString();
 				provIP = provIP.substring(1, provIP.length());
@@ -183,6 +194,21 @@ class ClientHandler implements Runnable{
 		}
 		MyBroker.providerPorts.add(provPort);
 		return provPort;
+	}
+	
+	public boolean containValidChars(String toCheck){
+		char x;
+		boolean uCaseFlag = false;
+		boolean lCaseFlag = false;
+		boolean numFlag = false;
+		for(int i = 0; i < toCheck.length(); i++){
+			x = toCheck.charAt(i);
+			if (Character.isDigit(x)){numFlag=true;}
+			else if (Character.isUpperCase(x)){uCaseFlag = true;}
+			else if (Character.isLowerCase(x)){lCaseFlag = true;}
+			if (uCaseFlag && lCaseFlag && numFlag){return false;}
+		}
+		return true;
 	}
 	
 	public boolean nameTaken(String uname){

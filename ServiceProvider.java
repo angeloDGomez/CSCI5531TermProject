@@ -51,7 +51,8 @@ public class ServiceProvider{
 			DataInputStream in = new DataInputStream( s.getInputStream());
 			DataOutputStream out =new DataOutputStream( s.getOutputStream());
 			out.writeUTF("registerProvider");
-			System.out.println("Please enter your desired username.");
+			System.out.println("Please enter your desired username.\n"+
+			"It must include an upper case letter, a lower case letter, and a number.");
 			String userName = inputScanner.nextLine();
 			boolean invalidUser = true;
 			while(invalidUser){
@@ -59,7 +60,9 @@ public class ServiceProvider{
 				invalidUser = in.readBoolean();
 				// Add userName and password checking
 				if (invalidUser){
-					System.out.println("\nPlease enter your desired username.");
+					int errorCode = in.readInt();
+					if(errorCode == 1){System.out.println("\nThat username is missing required characters.\nPlease try a different username.");} 
+					else if(errorCode == 2){System.out.println("\nThat username is taken.\nPlease try a different username.");}
 					userName = inputScanner.nextLine();					
 				}
 			}
