@@ -4,6 +4,9 @@ import java.util.Scanner;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class ServiceProvider{
 	final static int brokerPort = 49155;
@@ -234,13 +237,11 @@ class ClientServer implements Runnable{
 				getRandNum(in, out);
 			}
 			else if(request.equals("2")){
-				
+				getHash(in, out);
 			}
 			/* Additional else if statements can be added for new services.
 			The serviceID number is what goes into the request.equals() statement.
 			*/
-			
-			
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
@@ -262,7 +263,7 @@ class ClientServer implements Runnable{
 				if (keepLooping){
 					out.writeBoolean(true);
 					out.writeInt(1);
-					out.writeUTF("\nPlease enter a integer value.");
+					out.writeUTF("\nThis is not an integer value.");
 				}
 				else{l = Integer.parseInt(currIn);}
 				out.writeBoolean(true);	
@@ -286,6 +287,7 @@ class ClientServer implements Runnable{
 				}else{h = Integer.parseInt(currIn);}
 				out.writeBoolean(true);
 			}
+			// Calculate and return random number.
 			Random rand = new Random();
 			int randomNum = rand.nextInt((h - l) + 1) + l;
 			out.writeInt(1);
@@ -309,17 +311,90 @@ class ClientServer implements Runnable{
 	
 	public void getHash(DataInputStream in, DataOutputStream out){
 		try{
-			String stringToHash = ""
-			int hashType;
+			String stringToHash = "";
+			String hashedString = "";
+			int hashType = 0;
 			String currIn;
 			boolean keepLooping = true;
-			
-			
-			
-			
+			String[] hashMethodID = {"1", "2", "3"}; // add more hash method IDs here
+			String hashMethodString = "\nWhat hashing method would you like to implement: (Please enter a number from the options below)\n"+
+			"1. MD5\n2. SHA-1\n3. SHA-256"; // add more hashing methods here if implemented
+			// Get the user's desired hashing method.
+			while(keepLooping){
+				out.writeInt(2);
+				out.writeUTF(hashMethodString);
+				currIn = in.readUTF();
+				keepLooping = validHashID(hashMethodID, currIn);
+				if (keepLooping){
+					out.writeBoolean(true);
+					out.writeInt(1);
+					out.writeUTF("\nPlease enter a number associated with a hashing method");
+				}else{hashType = Integer.parseInt(currIn);}
+				out.writeBoolean(true);
+			}
+			// Get the string the user wishes to hash.
+			out.writeInt(2);
+			out.writeUTF("\nPlease enter the message you would like to hash:");
+			stringToHash = in.readUTF();
+			out.writeBoolean(true);
+			// Print out hashed message.
+			out.writeInt(1);
+			hashedString = calcHash(hashType, stringToHash);
+			out.writeUTF("\nYour hashed input is:\n");
+			out.writeBoolean(true);
+			out.writeInt(1);
+			out.writeUTF(hashedString);
+			out.writeBoolean(false);
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}	
 	}
+	
+	public boolean validHashID(String[] hashMethodID, String testHashID){
+		if (Arrays.asList(hashMethodID).contains(testHashID)){
+			return false;
+		}else{return true;}
+	}
+	
+	public String calcHash(int hashType, String strToHash){
+		// MD5
+		if (hashType == 1){
+			try{
+				MessageDigest md = MessageDigest.getInstance("MD5");
+				byte[] messageDigest = md.digest(strToHash.getBytes());				
+				BigInteger no = new BigInteger(1, messageDigest);
+				String hashtext = no.toString(16);
+				while (hashtext.length() < 32) {hashtext = "0" + hashtext;}
+				return hashtext;
+			}catch (NoSuchAlgorithmException e){
+				throw new RuntimeException(e);
+			}			
+		// SHA-1
+		}else if(hashType == 2){
+			try{
+				MessageDigest md = MessageDigest.getInstance("SHA-1");
+				byte[] messageDigest = md.digest(strToHash.getBytes()); 
+				BigInteger no = new BigInteger(1, messageDigest);	 
+				String hashtext = no.toString(16);
+				while (hashtext.length() < 32) {hashtext = "0" + hashtext;}
+				return hashtext;				
+			}catch (NoSuchAlgorithmException e){
+				throw new RuntimeException(e);
+			}
+		// SHA-256
+		}else{
+			try{
+				MessageDigest md = MessageDigest.getInstance("SHA-256");
+				byte[] messageDigest = md.digest(strToHash.getBytes());
+				BigInteger no = new BigInteger(1, messageDigest);
+				String hashtext = no.toString(16);
+				while (hashtext.length() < 32) {hashtext = "0" + hashtext;}
+				return hashtext;				
+			}catch (NoSuchAlgorithmException e){
+				throw new RuntimeException(e);
+			}			
+		}		
+	}
+	
 }
