@@ -231,7 +231,7 @@ class ClientServer implements Runnable{
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
 			if(request.equals("1")){
-				getRandNum(in, out);
+				//getRandNum(in, out);
 			}
 			else if(request.equals("2")){
 				
@@ -246,9 +246,16 @@ class ClientServer implements Runnable{
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
 	}
-	// Get a new class that implements Serializable and just has functions
+	
 	public void getRandNum(DataInputStream in, DataOutputStream out){
 		try{
+			int l;
+			int h;
+			String currIn;
+			out.writeInt(2);
+			out.writeUTF("\nPlease enter a integer value for the bottom of your random number's range:");
+			currIn = in.readUTF();
+			out.writeBoolean(false);
 			
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());

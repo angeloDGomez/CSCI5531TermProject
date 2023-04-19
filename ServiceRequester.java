@@ -52,6 +52,7 @@ public class ServiceRequester{
 			System.exit(0);
 			return "null";
 		}else{
+			System.out.println();
 			return getUserInput();
 		}	
 	}	
@@ -69,7 +70,25 @@ public class ServiceRequester{
 				DataInputStream in = new DataInputStream( s.getInputStream());
 				DataOutputStream out = new DataOutputStream( s.getOutputStream());
 				out.writeUTF(reqNum);
-				
+				boolean reqInProgress = true;
+				int command;
+				String toPrint;
+				String toSend;
+				while(reqInProgress){
+					command = in.readInt();
+					switch(command){
+						case 1://Print.
+							toPrint = in.readUTF();
+							System.out.println(toPrint);
+						case 2://Print and return user input.
+							toPrint = in.readUTF();
+							System.out.println(toPrint);
+							toSend = inputScanner.nextLine();
+							out.writeUTF(toSend);					
+					}
+					reqInProgress = in.readBoolean();
+					
+				}
 			} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 			} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 			} catch (IOException e){System.out.println("\nIO:"+e.getMessage());
