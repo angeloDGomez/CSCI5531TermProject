@@ -128,7 +128,7 @@ class BrokerCom implements Runnable{
 			}			
 		}else{ // Checks for desired service.
 			while(!(Arrays.asList(serviceOptionList).contains(userInput))){
-				System.out.println("\nPlease enter a number associated with the listed servies.");
+				System.out.println("\nPlease enter a number associated with the listed services.");
 				System.out.println(serviceOptionString);
 				userInput = inputScanner.nextLine();
 			}	
@@ -230,7 +230,15 @@ class ClientServer implements Runnable{
 			in = new DataInputStream(clientSocket.getInputStream());
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
-			
+			if(request.equals("1")){
+				getRandNum(in, out);
+			}
+			else if(request.equals("2")){
+				
+			}
+			/* Additional else if statements can be added for new services.
+			The serviceID number is what goes into the request.equals() statement.
+			*/
 			
 			
 		// error handling
@@ -238,6 +246,15 @@ class ClientServer implements Runnable{
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
 	}
-	
+	// Get a new class that implements Serializable and just has functions
+	public void getRandNum(DataInputStream in, DataOutputStream out){
+		try{
+			
+		// error handling
+		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
+		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
+		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
+		
+	}
 	
 }

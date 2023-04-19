@@ -2,6 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.*;
 
 public class MyBroker{
 	// Array List acts as Broker Inventory
@@ -80,6 +81,10 @@ class BrokerItems{
 		}
 		else{return false;}
 	}
+	
+	public boolean serviceAvailable(int serviceID){
+		return services.contains(serviceID);
+	}
 }
 
 class ClientHandler implements Runnable{
@@ -145,7 +150,22 @@ class ClientHandler implements Runnable{
 				System.out.printf("New provider %s has been registerd.\n", userName);
 				out.writeInt(provPort);
 			}else{//else statement is only called by Service Requester
-				
+				int serviceID = Integer.valueOf(request);
+				int brokerSize = MyBroker.brokerInventory.size();
+				if (brokerSize > 1){
+					Collections.shuffle(MyBroker.brokerInventory);
+				}
+				int i;
+				for (i = 0; i < brokerSize; i++){
+					if (MyBroker.brokerInventory.get(i).serviceAvailable(serviceID)){break;}
+				}
+				if (i == brokerSize){
+					out.writeUTF("-1");
+					out.writeUTF("-1");
+				}else{
+					out.writeUTF(MyBroker.brokerInventory.get(i).getIPadd());
+					out.writeUTF(MyBroker.brokerInventory.get(i).getPortNum());
+				}
 			}	
 		// error handling
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
@@ -153,6 +173,7 @@ class ClientHandler implements Runnable{
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
 	}
 	
+	// may need to implment this in a way that it uses the brokerInventory
 	public int generatePort(){
 		Random rand = new Random();
 		int provPort = 49155;
