@@ -169,13 +169,22 @@ class BrokerCom implements Runnable{
 				System.out.println("\nYou have ran out of attempts.\nEnding add service process.");
 			}
 			else{
-				System.out.println("\nUsername and password accepted!");
+				System.out.println("\nUsername and password accepted!\n");
+				Thread.sleep(100);
 				// Add two factor authentication here
+				boolean confirm2FA = true;
+				while(confirm2FA){
+					System.out.println("\nPlease enter your two-factor authentication code:");
+					String twoFACode = inputScanner.nextLine();
+					out.writeUTF(twoFACode);
+					confirm2FA = in.readBoolean();
+				}
 				out.writeUTF(serviceNum);
 				if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
 				else{System.out.println("\nYou already provide this service.\nIt cannot be added again.");}
 			}
-			s.close();	
+			s.close();
+		} catch (InterruptedException e){
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 		} catch (IOException e){
@@ -209,13 +218,21 @@ class BrokerCom implements Runnable{
 				System.out.println("\nYou have ran out of attempts.\nEnding add service process.");
 			}
 			else{
-				System.out.println("\nUsername and password accepted!");
-				// Add two factor authentication here			
+				System.out.println("\nUsername and password accepted!\n");
+				Thread.sleep(100);
+				boolean confirm2FA = true;
+				while(confirm2FA){
+					System.out.println("\nPlease enter your two-factor authentication code:");
+					String twoFACode = inputScanner.nextLine();
+					out.writeUTF(twoFACode);
+					confirm2FA = in.readBoolean();
+				}				
 				out.writeUTF(serviceNum);
 				if(in.readBoolean()){System.out.println("\nThe Service was successfully removed from the broker.");}
 				else{System.out.println("\nYou do not provide this service.\nIt cannot be removed.");}
 				s.close();
-			}			
+			}
+		} catch (InterruptedException e){
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 		} catch (IOException e){
@@ -258,7 +275,7 @@ class ClientServer implements Runnable{
 			String request = in.readUTF();
 			if (request.equals("0")){
 				int authCode = in.readInt();
-				System.out.printf("\nThe following is your two-factor authentication code:\n %d\n", authCode);
+				System.out.printf("The following is your two-factor authentication code:\n%d\n", authCode);
 			}
 			else if(request.equals("1")){
 				getRandNum(in, out);
