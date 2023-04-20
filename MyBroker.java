@@ -116,41 +116,25 @@ class ClientHandler implements Runnable{
 					out.writeInt(validUP);
 				}
 				if (attempts < 3){
-					// implement 2FA here
 					BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
+					TwoFA my2FA = new TwoFA(currentClient.getIPadd(), Integer.parseInt(currentClient.getPortNum()));
+					Thread twoFAThread = new Thread(my2FA);
+					twoFAThread.start();
+					try { twoFAThread.join();} 
+					catch (InterruptedException e) { System.out.println("Interrupted Exception");}
+					int authCode = my2FA.getAuthCode();
+					System.out.println(authCode);
+					//int authCode = twoFA(currentClient.getIPadd(), currentClient.getPortNum());
+
 					int serviceID = Integer.valueOf(in.readUTF());
 					if (request.equals("addService")){
 						boolean successfulAdd = currentClient.addService(serviceID);
 						out.writeBoolean(successfulAdd);	
 					}else{
-						System.out.println("penis");
 						boolean successfulRemove = currentClient.removeService(serviceID);
 						out.writeBoolean(successfulRemove);
 					}				
 				}
-			}else if(request.equals("removeService")){
-				int attempts = 0;
-				String currUN = in.readUTF();
-				String currPass = in.readUTF();
-				int validUP = validUser(currUN, currPass);	
-				out.writeInt(validUP);
-				while(validUP == -1){
-					attempts +=1;
-					out.writeInt(attempts);
-					if (attempts == 3){break;}
-					currUN = in.readUTF();
-					currPass = in.readUTF();
-					validUP = validUser(currUN, currPass);
-					out.writeInt(validUP);
-				}
-				if (attempts < 3){
-					// implement 2FA here
-					BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
-					
-					int serviceID = Integer.valueOf(in.readUTF());
-					boolean successfulRemove = currentClient.removeService(serviceID);
-					out.writeBoolean(successfulRemove);
-				}				
 			}
 			else if(request.equals("registerProvider")){
 				int provPort = generatePort();
@@ -266,7 +250,59 @@ class ClientHandler implements Runnable{
 		else{return -1;}	
 	}
 	
-	public void twoFA(){
-		
+	/*public int twoFA(String ipAdd, String portNum){
+		Socket s = null;
+		int authCode = 0;
+		Random rand = new Random();
+		try{
+			s = new Socket(ipAdd, Integer.parseInt(portNum));
+			DataInputStream in = new DataInputStream( s.getInputStream());
+			DataOutputStream out = new DataOutputStream( s.getOutputStream());
+			out.writeInt(0);
+			int i;
+			for (i = 100000; i >= 1; i = i/10){
+				authCode += (rand.nextInt(10) * i);
+			}
+			out.writeInt(authCode);
+		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
+		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
+		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
+		} finally { try {clientSocket.close();}catch (IOException e){}}
+		return authCode;
+	}*/
+}
+
+class TwoFA implements Runnable{
+	private String ipAdd;
+	private int port;
+	private int authCode = 0;
+	
+	public TwoFA(String ipAdd, int port){
+		this.ipAdd = ipAdd;
+		this.port = port;
 	}
+	
+	public void run(){
+		Socket s = null;
+		Random rand = new Random();
+		try{
+			s = new Socket(ipAdd, port);
+			DataInputStream in = new DataInputStream( s.getInputStream());
+			DataOutputStream out = new DataOutputStream( s.getOutputStream());
+			out.writeUTF("0");
+			int i;
+			for (i = 100000; i >= 1; i = i/10){
+				authCode += (rand.nextInt(10) * i);
+			}
+			out.writeInt(authCode);
+		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
+		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
+		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
+		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
+	}
+	
+	public int getAuthCode(){
+		return authCode;
+	}
+	
 }

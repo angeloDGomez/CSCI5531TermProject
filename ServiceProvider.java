@@ -256,7 +256,11 @@ class ClientServer implements Runnable{
 			in = new DataInputStream(clientSocket.getInputStream());
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
-			if(request.equals("1")){
+			if (request.equals("0")){
+				int authCode = in.readInt();
+				System.out.printf("\nThe following is your two-factor authentication code:\n %d\n", authCode);
+			}
+			else if(request.equals("1")){
 				getRandNum(in, out);
 			}
 			else if(request.equals("2")){
