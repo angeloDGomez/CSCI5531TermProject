@@ -58,7 +58,6 @@ public class ServiceProvider{
 			while(invalidUser){
 				out.writeUTF(userName);
 				invalidUser = in.readBoolean();
-				// Add userName and password checking
 				if (invalidUser){
 					int errorCode = in.readInt();
 					if(errorCode == 1){System.out.println("\nThat username is missing required characters.\nPlease try a different username.");} 
