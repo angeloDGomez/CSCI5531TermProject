@@ -118,7 +118,6 @@ class BrokerCom implements Runnable{
 				userInput = validateOption(2, userInput);
 				System.out.println("\nContacting Service Broker to fulfull request.");
 				manageService("addService", userInput);
-				//addService(userInput);
 			}else{
 				System.out.println("\nWhat sevice would you like to remove:");
 				System.out.println(serviceOptionString);
@@ -126,7 +125,6 @@ class BrokerCom implements Runnable{
 				userInput = validateOption(2, userInput);
 				System.out.println("\nContacting Service Broker to fulfull request.");
 				manageService("removeService", userInput);
-				//removeService(userInput);
 			}
 		}
 	}
@@ -170,8 +168,7 @@ class BrokerCom implements Runnable{
 			if(attempts == 3){System.out.println("Ending add service process.");}
 			else{
 				System.out.println("\nUsername and password accepted!\n");
-				Thread.sleep(100);
-				boolean confirm2FA = true;
+				boolean confirm2FA = in.readBoolean(); // recieve true after 2FA was sent to the provider's IP
 				attempts = 0;
 				System.out.println("\nPlease enter your two-factor authentication code:");
 				String twoFACode = inputScanner.nextLine();
@@ -199,7 +196,6 @@ class BrokerCom implements Runnable{
 				}
 			}
 			s.close();
-		} catch (InterruptedException e){
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 		} catch (IOException e){
@@ -243,6 +239,7 @@ class ClientServer implements Runnable{
 			if (request.equals("0")){
 				int authCode = in.readInt();
 				System.out.printf("The following is your two-factor authentication code:\n%d\n", authCode);
+				out.writeBoolean(true);
 			}
 			else if(request.equals("1")){
 				getRandNum(in, out);

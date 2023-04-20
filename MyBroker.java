@@ -119,12 +119,12 @@ class ClientHandler implements Runnable{
 					BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
 					TwoFA my2FA = new TwoFA(currentClient.getIPadd(), Integer.parseInt(currentClient.getPortNum()));
 					Thread twoFAThread = new Thread(my2FA);
-					twoFAThread.run();
-					try { twoFAThread.join();} 
-					catch (InterruptedException e) { System.out.println("Interrupted Exception");}
+					twoFAThread.start();
+					twoFAThread.join();
 					int authCode = my2FA.getAuthCode();
 					String authCodeS = Integer.toString(authCode);
 					boolean confirm2FA = true;
+					out.writeBoolean(confirm2FA);
 					attempts = 0;
 					String user2FA = in.readUTF();
 					if(user2FA.equals(authCodeS)){
@@ -212,6 +212,7 @@ class ClientHandler implements Runnable{
 				}
 			}	
 		// error handling
+		}catch (InterruptedException e) { System.out.println("Interrupted Exception");
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
 		} catch(IOException e) {System.out.println("IO:"+e.getMessage());
 		} finally { try {clientSocket.close();}catch (IOException e){/*close failed*/}}
@@ -291,7 +292,9 @@ class TwoFA implements Runnable{
 			for (i = 100000; i >= 1; i = i/10){
 				authCode += (rand.nextInt(10) * i);
 			}
+			System.out.println("Sending 2FA code to provider's IP.");
 			out.writeInt(authCode);
+			in.readBoolean(); // recieve true when done printing on provider side
 			s.close();
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch(EOFException e) {System.out.println("EOF:"+e.getMessage());
