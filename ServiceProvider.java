@@ -117,14 +117,16 @@ class BrokerCom implements Runnable{
 				userInput = inputScanner.nextLine();
 				userInput = validateOption(2, userInput);
 				System.out.println("\nContacting Service Broker to fulfull request.");
-				addService(userInput);
+				manageService("addService", userInput);
+				//addService(userInput);
 			}else{
 				System.out.println("\nWhat sevice would you like to remove:");
 				System.out.println(serviceOptionString);
 				userInput = inputScanner.nextLine();
 				userInput = validateOption(2, userInput);
 				System.out.println("\nContacting Service Broker to fulfull request.");
-				removeService(userInput);
+				manageService("removeService", userInput);
+				//removeService(userInput);
 			}
 		}
 	}
@@ -145,6 +147,67 @@ class BrokerCom implements Runnable{
 		return userInput;	
 	}
 	
+	public void manageService(String actionName, String serviceNum){
+		Socket s = null;
+		try{
+			s = new Socket("localhost", brokerPort);
+			DataInputStream in = new DataInputStream( s.getInputStream());
+			DataOutputStream out =new DataOutputStream( s.getOutputStream());
+			out.writeUTF(actionName);
+			out.writeUTF(requestUName());
+			out.writeUTF(requestPassword());
+			int isValid = in.readInt();
+			int attempts = 0;
+			while(isValid == -1){
+				attempts = in.readInt();
+				System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
+				if (attempts == 3){break;}
+				System.out.println("\nUsername or password was incorrect.\nPlease try again.");
+				out.writeUTF(requestUName());
+				out.writeUTF(requestPassword());
+				isValid = in.readInt();
+			}
+			if(attempts == 3){System.out.println("Ending add service process.");}
+			else{
+				System.out.println("\nUsername and password accepted!\n");
+				Thread.sleep(100);
+				boolean confirm2FA = true;
+				attempts = 0;
+				System.out.println("\nPlease enter your two-factor authentication code:");
+				String twoFACode = inputScanner.nextLine();
+				out.writeUTF(twoFACode);
+				confirm2FA = in.readBoolean();
+				while(confirm2FA){
+					attempts = in.readInt();
+					System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
+					if (attempts == 3){break;}
+					System.out.println("\nTwo-Factor authentication code was incorrect.\nPlease try again.");
+					twoFACode = inputScanner.nextLine();
+					out.writeUTF(twoFACode);
+					confirm2FA = in.readBoolean();
+				}
+				if (attempts == 3){System.out.println("Ending add service process.");}
+				else{
+					out.writeUTF(serviceNum);
+					if (actionName.equals("addService")){
+						if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
+						else{System.out.println("\nYou already provide this service.\nIt cannot be added again.");}
+					}else{
+						if(in.readBoolean()){System.out.println("\nThe Service was successfully removed from the broker.");}
+						else{System.out.println("\nYou do not provide this service.\nIt cannot be removed.");}		
+					}
+				}
+			}
+			s.close();
+		} catch (InterruptedException e){
+		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
+		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
+		} catch (IOException e){
+			System.out.println("\nIO:"+e.getMessage());
+			System.out.println("Broker is currently unavailable.\nShutting down.");
+			System.exit(0);			
+		} finally {if(s!=null) try {s.close();}catch (IOException e){/*close failed*/}}
+	}
 	public void addService(String serviceNum){
 		Socket s = null;
 		try{
@@ -165,23 +228,31 @@ class BrokerCom implements Runnable{
 				out.writeUTF(requestPassword());
 				isValid = in.readInt();
 			}
-			if(attempts == 3){
-				System.out.println("\nYou have ran out of attempts.\nEnding add service process.");
-			}
+			if(attempts == 3){System.out.println("Ending add service process.");}
 			else{
 				System.out.println("\nUsername and password accepted!\n");
 				Thread.sleep(100);
-				// Add two factor authentication here
 				boolean confirm2FA = true;
+				attempts = 0;
+				System.out.println("\nPlease enter your two-factor authentication code:");
+				String twoFACode = inputScanner.nextLine();
+				out.writeUTF(twoFACode);
+				confirm2FA = in.readBoolean();
 				while(confirm2FA){
-					System.out.println("\nPlease enter your two-factor authentication code:");
-					String twoFACode = inputScanner.nextLine();
+					attempts = in.readInt();
+					System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
+					if (attempts == 3){break;}
+					System.out.println("\nTwo-Factor authentication code was incorrect.\nPlease try again.");
+					twoFACode = inputScanner.nextLine();
 					out.writeUTF(twoFACode);
 					confirm2FA = in.readBoolean();
 				}
-				out.writeUTF(serviceNum);
-				if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
-				else{System.out.println("\nYou already provide this service.\nIt cannot be added again.");}
+				if (attempts == 3){System.out.println("Ending add service process.");}
+				else{
+					out.writeUTF(serviceNum);
+					if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
+					else{System.out.println("\nYou already provide this service.\nIt cannot be added again.");}
+				}
 			}
 			s.close();
 		} catch (InterruptedException e){
@@ -209,29 +280,39 @@ class BrokerCom implements Runnable{
 			while(isValid == -1){
 				attempts = in.readInt();
 				System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
+				if (attempts == 3){break;}
 				System.out.println("\nUsername or password was incorrect.\nPlease try again.");
 				out.writeUTF(requestUName());
 				out.writeUTF(requestPassword());
 				isValid = in.readInt();
 			}
-			if(attempts == 3){
-				System.out.println("\nYou have ran out of attempts.\nEnding add service process.");
-			}
+			if(attempts == 3){System.out.println("Ending add service process.");}
 			else{
 				System.out.println("\nUsername and password accepted!\n");
 				Thread.sleep(100);
 				boolean confirm2FA = true;
+				attempts = 0;
+				System.out.println("\nPlease enter your two-factor authentication code:");
+				String twoFACode = inputScanner.nextLine();
+				out.writeUTF(twoFACode);
+				confirm2FA = in.readBoolean();
 				while(confirm2FA){
-					System.out.println("\nPlease enter your two-factor authentication code:");
-					String twoFACode = inputScanner.nextLine();
+					attempts = in.readInt();
+					System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
+					if (attempts == 3){break;}
+					System.out.println("\nTwo-Factor authentication code was incorrect.\nPlease try again.");
+					twoFACode = inputScanner.nextLine();
 					out.writeUTF(twoFACode);
 					confirm2FA = in.readBoolean();
-				}				
-				out.writeUTF(serviceNum);
-				if(in.readBoolean()){System.out.println("\nThe Service was successfully removed from the broker.");}
-				else{System.out.println("\nYou do not provide this service.\nIt cannot be removed.");}
-				s.close();
+				}
+				if (attempts == 3){System.out.println("Ending add service process.");}
+				else{
+					out.writeUTF(serviceNum);
+					if(in.readBoolean()){System.out.println("\nThe Service was successfully removed from the broker.");}
+					else{System.out.println("\nYou do not provide this service.\nIt cannot be removed.");}
+				}
 			}
+			s.close();
 		} catch (InterruptedException e){
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());

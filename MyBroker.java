@@ -125,21 +125,33 @@ class ClientHandler implements Runnable{
 					int authCode = my2FA.getAuthCode();
 					String authCodeS = Integer.toString(authCode);
 					boolean confirm2FA = true;
+					attempts = 0;
+					String user2FA = in.readUTF();
+					if(user2FA.equals(authCodeS)){
+						confirm2FA = false;
+						out.writeBoolean(false);
+					}else{out.writeBoolean(true);}					
 					while(confirm2FA){
-						String user2FA = in.readUTF();
+						attempts += 1;
+						out.writeInt(attempts);
+						if (attempts == 3){break;}
+						user2FA = in.readUTF();
 						if(user2FA.equals(authCodeS)){
 							confirm2FA = false;
 							out.writeBoolean(false);
 						}else{out.writeBoolean(true);}
+	
 					}
-					int serviceID = Integer.valueOf(in.readUTF());
-					if (request.equals("addService")){
-						boolean successfulAdd = currentClient.addService(serviceID);
-						out.writeBoolean(successfulAdd);
-					}else{
-						boolean successfulRemove = currentClient.removeService(serviceID);
-						out.writeBoolean(successfulRemove);
-					}				
+					if (attempts <3){
+						int serviceID = Integer.valueOf(in.readUTF());
+						if (request.equals("addService")){
+							boolean successfulAdd = currentClient.addService(serviceID);
+							out.writeBoolean(successfulAdd);
+						}else{
+							boolean successfulRemove = currentClient.removeService(serviceID);
+							out.writeBoolean(successfulRemove);
+						}
+					}
 				}
 			}
 			else if(request.equals("registerProvider")){
