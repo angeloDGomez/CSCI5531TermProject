@@ -30,7 +30,6 @@ public class MyBroker{
                 catch (IOException e) {e.printStackTrace();}
             }
 		}
-		
 	}
 }
 
@@ -101,41 +100,61 @@ class ClientHandler implements Runnable{
 			in = new DataInputStream(clientSocket.getInputStream());
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			String request = in.readUTF();
-			if(request.equals("addService")){
+			if(request.equals("addService") || request.equals("removeService")){
+				int attempts = 0;
 				String currUN = in.readUTF();
 				String currPass = in.readUTF();
 				int validUP = validUser(currUN, currPass);
 				out.writeInt(validUP);
-				// Maybe implement number of tries before failing
 				while(validUP == -1){
+					attempts += 1;
+					out.writeInt(attempts);
+					if (attempts == 3){break;}
 					currUN = in.readUTF();
 					currPass = in.readUTF();
 					validUP = validUser(currUN, currPass);
 					out.writeInt(validUP);
 				}
-				// implement 2FA here
-				int serviceID = Integer.valueOf(in.readUTF());
-				BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
-				boolean successfulAdd = currentClient.addService(serviceID);
-				out.writeBoolean(successfulAdd);
+				if (attempts < 3){
+					// implement 2FA here
+					BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
+					int serviceID = Integer.valueOf(in.readUTF());
+					if (request.equals("addService")){
+						boolean successfulAdd = currentClient.addService(serviceID);
+						out.writeBoolean(successfulAdd);	
+					}else{
+						System.out.println("penis");
+						boolean successfulRemove = currentClient.removeService(serviceID);
+						out.writeBoolean(successfulRemove);
+					}				
+				}
 			}else if(request.equals("removeService")){
+				int attempts = 0;
 				String currUN = in.readUTF();
 				String currPass = in.readUTF();
 				int validUP = validUser(currUN, currPass);	
 				out.writeInt(validUP);
 				while(validUP == -1){
+					attempts +=1;
+					out.writeInt(attempts);
+					if (attempts == 3){break;}
 					currUN = in.readUTF();
 					currPass = in.readUTF();
 					validUP = validUser(currUN, currPass);
 					out.writeInt(validUP);
 				}
-				// implement 2FA here				
-				int serviceID = Integer.valueOf(in.readUTF());
-				BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
-				boolean successfulRemove = currentClient.removeService(serviceID);
-				out.writeBoolean(successfulRemove);				
-			}else if(request.equals("registerProvider")){
+				if (attempts < 3){
+					// implement 2FA here
+					BrokerItems currentClient = MyBroker.brokerInventory.get(validUP);
+					
+					int serviceID = Integer.valueOf(in.readUTF());
+					boolean successfulRemove = currentClient.removeService(serviceID);
+					out.writeBoolean(successfulRemove);
+				}				
+			}
+			else if(request.equals("registerProvider")){
 				int provPort = generatePort();
+				// Get a valid user name.
 				boolean invalidUser = true;
 				String userName = "";
 				while(invalidUser){
@@ -154,14 +173,25 @@ class ClientHandler implements Runnable{
 					}
 				}
 				out.writeBoolean(invalidUser);
-				String pass = in.readUTF();
+				// Get a valid password.
+				boolean invalidPassword = true;
+				String pass = "";
+				while (invalidPassword){
+					pass = in.readUTF();
+					invalidPassword = containValidChars(pass);
+					if(invalidPassword){
+						out.writeBoolean(invalidPassword);
+					}
+				}
+				out.writeBoolean(invalidPassword);
 				String provIP = clientSocket.getInetAddress().toString();
 				provIP = provIP.substring(1, provIP.length());
 				BrokerItems newProvider = new BrokerItems(provIP, Integer.toString(provPort), userName, pass);
 				MyBroker.brokerInventory.add(newProvider);
 				System.out.printf("New provider %s has been registerd.\n", userName);
 				out.writeInt(provPort);
-			}else{//else statement is only called by Service Requester
+			}
+			else{//else statement is only called by Service Requester
 				int serviceID = Integer.valueOf(request);
 				int brokerSize = MyBroker.brokerInventory.size();
 				if (brokerSize > 1){
@@ -236,4 +266,7 @@ class ClientHandler implements Runnable{
 		else{return -1;}	
 	}
 	
+	public void twoFA(){
+		
+	}
 }

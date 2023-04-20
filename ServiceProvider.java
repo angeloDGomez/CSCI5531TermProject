@@ -66,14 +66,17 @@ public class ServiceProvider{
 					userName = inputScanner.nextLine();					
 				}
 			}
-			System.out.println("\nPlease enter your desired password.");
+			System.out.println("\nPlease enter your desired password.\nIt must include an upper case letter, a lower case letter, and a number.");
 			String password = inputScanner.nextLine();
-			/*
-			while(userName.length > 10 || userName.length < 1){
-				System.out.println("Please enter your desired password. (No more than 10 characters long)\n");
-				password = inputScanner.nextLine();
-			}*/
-			out.writeUTF(password);			
+			boolean invalidPassword = true;
+			while(invalidPassword){
+				out.writeUTF(password);
+				invalidPassword = in.readBoolean();
+				if (invalidPassword){
+					System.out.println("\nThat password is missing required characters.\nPlease try a different password.");
+					password = inputScanner.nextLine();
+				}
+			}	
 			int myPort = in.readInt();
 			return myPort;
 		// error handling
@@ -152,17 +155,26 @@ class BrokerCom implements Runnable{
 			out.writeUTF(requestUName());
 			out.writeUTF(requestPassword());
 			int isValid = in.readInt();
+			int attempts = 0;
 			while(isValid == -1){
+				attempts = in.readInt();
+				System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
+				if (attempts == 3){break;}
 				System.out.println("\nUsername or password was incorrect.\nPlease try again.");
 				out.writeUTF(requestUName());
 				out.writeUTF(requestPassword());
 				isValid = in.readInt();
 			}
-			System.out.println("\nUsername and password accepted!");
-			// Add two factor authentication here
-			out.writeUTF(serviceNum);
-			if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
-			else{System.out.println("\nYou already provide this service.\nIt cannot be added again.");}
+			if(attempts == 3){
+				System.out.println("\nYou have ran out of attempts.\nEnding add service process.");
+			}
+			else{
+				System.out.println("\nUsername and password accepted!");
+				// Add two factor authentication here
+				out.writeUTF(serviceNum);
+				if(in.readBoolean()){System.out.println("\nThe Service was successfully added to the broker.");}
+				else{System.out.println("\nYou already provide this service.\nIt cannot be added again.");}
+			}
 			s.close();	
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
@@ -184,18 +196,26 @@ class BrokerCom implements Runnable{
 			out.writeUTF(requestUName());
 			out.writeUTF(requestPassword());
 			int isValid = in.readInt();
+			int attempts = 0;
 			while(isValid == -1){
+				attempts = in.readInt();
+				System.out.printf("\nYou have %d attempts remaining.\n", (3 -attempts));
 				System.out.println("\nUsername or password was incorrect.\nPlease try again.");
 				out.writeUTF(requestUName());
 				out.writeUTF(requestPassword());
 				isValid = in.readInt();
+			}
+			if(attempts == 3){
+				System.out.println("\nYou have ran out of attempts.\nEnding add service process.");
+			}
+			else{
+				System.out.println("\nUsername and password accepted!");
+				// Add two factor authentication here			
+				out.writeUTF(serviceNum);
+				if(in.readBoolean()){System.out.println("\nThe Service was successfully removed from the broker.");}
+				else{System.out.println("\nYou do not provide this service.\nIt cannot be removed.");}
+				s.close();
 			}			
-			System.out.println("\nUsername and password accepted!");
-			// Add two factor authentication here			
-			out.writeUTF(serviceNum);
-			if(in.readBoolean()){System.out.println("\nThe Service was successfully removed from the broker.");}
-			else{System.out.println("\nYou do not provide this service.\nIt cannot be removed.");}
-			s.close();				
 		} catch (UnknownHostException e){System.out.println("\nSock:"+e.getMessage()); 
 		} catch (EOFException e){System.out.println("\nEOF:"+e.getMessage());
 		} catch (IOException e){
