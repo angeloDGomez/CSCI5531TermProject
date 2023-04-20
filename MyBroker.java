@@ -123,6 +123,7 @@ class ClientHandler implements Runnable{
 					try { twoFAThread.join();} 
 					catch (InterruptedException e) { System.out.println("Interrupted Exception");}
 					int authCode = my2FA.getAuthCode();
+					String authCodeS = Integer.toString(authCode);
 					boolean confirm2FA = true;
 					while(confirm2FA){
 						String user2FA = in.readUTF();
