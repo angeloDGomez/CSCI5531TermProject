@@ -390,7 +390,7 @@ class ClientServer implements Runnable{
 				throw new RuntimeException(e);
 			}
 		// SHA-256
-		}else{
+		}else if (hashType ==3){
 			try{
 				MessageDigest md = MessageDigest.getInstance("SHA-256");
 				byte[] messageDigest = md.digest(strToHash.getBytes());
@@ -401,7 +401,9 @@ class ClientServer implements Runnable{
 			}catch (NoSuchAlgorithmException e){
 				throw new RuntimeException(e);
 			}			
-		}		
+		}
+		
+		return "";
 	}
 	
 }
